@@ -1,10 +1,11 @@
-if not _G.notagain then
-	include("notagain.lua")
-end
+
+_G.webaudio = nil
+_G.goluwa = nil
+_G.notagain = nil
+
+include("notagain.lua")
 
 notagain.Initialize()
+notagain.Autorun()
 
-hook.Add("PreGamemodeLoaded", "notagain", function()
-	notagain.Autorun()
-	hook.Remove("PreGamemodeLoaded", "notagain")
-end)
+net.Receive("chatsounds", function() end)
