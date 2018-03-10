@@ -22,7 +22,9 @@ do
 	hook.Add("StartChat", "chatsounds_autocomplete_init", function()
 		if not chatsounds_enabled:GetBool() then return end
 
-		hook.Add("OnChatTab", "chatsounds_autocomplete", function(str)
+		hook.Add("OnChatTab", "chatsounds_autocomplete", function(str, peek)
+			if peek then return end
+
 			if str == "random" or random_mode then
 				random_mode = true
 				query("", 0)
@@ -60,12 +62,9 @@ do
 	hook.Add("FinishChat", "chatsounds_autocomplete", function()
 		if not chatsounds_enabled:GetBool() then return end
 
-		-- in some cases ChatTextChanged is called on FinishChat which adds the hook again
-		timer.Simple(0, function()
-			hook.Remove("PostRenderVGUI", "chatsounds_autocomplete")
-			hook.Remove("ChatTextChanged", "chatsounds_autocomplete")
-			hook.Remove("OnChatTab", "chatsounds_autocomplete")
-		end)
+		hook.Remove("PostRenderVGUI", "chatsounds_autocomplete")
+		hook.Remove("ChatTextChanged", "chatsounds_autocomplete")
+		hook.Remove("OnChatTab", "chatsounds_autocomplete")
 	end)
 end
 
