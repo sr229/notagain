@@ -97,6 +97,7 @@ local function player_say(ply, str)
 	end
 
 	if str:Trim():find("^<.*>$") then return end
+	if aowl and aowl.Prefix and str:find("^" .. aowl.Prefix) then return end
 
 	env.audio.player_object = ply
 	env.chatsounds.Say(str, math.Round(CurTime()))
