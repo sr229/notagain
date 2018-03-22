@@ -123,12 +123,13 @@ function webaudio.Initialize()
 	webaudio.browser_panel:SetSize(1, 1)
 
 	local last_message = nil
-	webaudio.browser_panel.ConsoleMessage = function(self, message)
+	webaudio.browser_panel.ConsoleMessage = function(self, message, _, line)
 		-- why does awesomium crash in the first place?
-		if msg == "Uncaught ReferenceError: lua is not defined" then
+		if message == "Uncaught ReferenceError: lua is not defined" then
 			webaudio.browser_state = "uninitialized"
 		end
 
+		message = (line and (line ~= 1 and (line .. ": ")) or "") .. message
 		if last_message ~= message then
 			last_message = message
 			dprint(message)
@@ -156,393 +157,385 @@ function webaudio.Initialize()
 		end
 	end)
 
-	local js = ([==[
-/*jslint bitwise: true */
+	local webaudioJavascript = [[
+		/* jslint bitwise: true */
 
-window.onerror = function(description, url, line)
-{
-	dprint("Unhandled exception at line " + line + ": " + description);
-};
-
-function dprint(str)
-{
-	]==] .. (webaudio.debug and "lua.print(str);" or "") .. [==[
-}
-
-var audio;
-var gain;
-var processor;
-var streams = new Object();
-var streams_array = [];
-
-function open()
-{
-    if(audio)
-    {
-        audio.destination.disconnect();
-    }
-
-    if (typeof AudioContext != "undefined")
-    {
-        audio = new AudioContext();
-        processor = audio.createScriptProcessor(]==] .. webaudio.buffer_size:GetInt() .. [==[, 2, 2);
-        gain = audio.createGain();
-		compressor = audio.createDynamicsCompressor()
-    } else {
-        audio = new webkitAudioContext();
-        processor = audio.createJavaScriptNode(]==] .. webaudio.buffer_size:GetInt() .. [==[, 2, 2);
-        gain = audio.createGainNode();
-		compressor = audio.createDynamicsCompressor()
-    }
-
-    processor.onaudioprocess = function(event)
-    {
-        var output_left = event.outputBuffer.getChannelData(0);
-        var output_right = event.outputBuffer.getChannelData(1);
-
-        for(var i = 0; i < event.outputBuffer.length; ++i)
-        {
-            output_left[i] = 0;
-            output_right[i] = 0;
-        }
-
-        for(var i = 0; i < streams_array.length; ++i)
-        {
-            var stream = streams_array[i];
-
-            var buffer_length = stream.buffer.length;
-            var buffer_left = stream.buffer.getChannelData(0);
-            var buffer_right = stream.buffer.numberOfChannels == 1 ? buffer_left : stream.buffer.getChannelData(1);
-
-			if (stream.use_smoothing)
-			{
-				stream.speed_smooth = stream.speed_smooth + (stream.speed - stream.speed_smooth) * 1;
-				stream.vol_left_smooth = stream.vol_left_smooth  + (stream.vol_left  - stream.vol_left_smooth ) * 1;
-				stream.vol_right_smooth = stream.vol_right_smooth + (stream.vol_right - stream.vol_right_smooth) * 1;
-			}
-			else
-			{
-				stream.speed_smooth = stream.speed;
-				stream.vol_left_smooth  = stream.vol_left_smooth;
-				stream.vol_right_smooth = stream.vol_right_smooth;
-			}
-
-			if(!stream.use_echo && (stream.paused || (stream.vol_left < 0.001 && stream.vol_right < 0.001)))
-            {
-                continue;
-            }
-            var echol;
-            var echor;
-            if (stream.use_echo && stream.echo_buffer)
-            {
-                echol = stream.echo_buffer.getChannelData(0);
-                echor = stream.echo_buffer.getChannelData(1);
-            }
-
-            var sml = 0;
-            var smr = 0;
-
-            for(var j = 0; j < event.outputBuffer.length; ++j)
-            {
-				if (stream.paused || stream.max_loop > 0 && stream.position > buffer_length * stream.max_loop)
-                {
-                    stream.done_playing = true;
-
-					if (!stream.paused)
-					{
-					    stream.paused = true;
-					}
-
-                    if (!stream.use_echo)
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    stream.done_playing = false;
-                }
-
-                var index = (stream.position >> 0) % buffer_length;
-
-				if (stream.reverse)
-				{
-					index = -index + buffer_length;
-				}
-
-                var left  = 0;
-                var right = 0;
-
-                if (!stream.done_playing)
-                {
-                    // filters
-					if (stream.filter_type == 0)
-					{
-						// None
-                        left = buffer_left[index] * stream.vol_both;
-                        right = buffer_right[index] * stream.vol_both;
-					}
-					else
-                    {
-                        sml = sml + (buffer_left[index] - sml) * stream.filter_fraction;
-                        smr = smr + (buffer_right[index] - smr) * stream.filter_fraction;
-
-                        if (stream.filter_type == 1)
-                        {
-							// Low pass
-                            left = sml * stream.vol_both;
-                            right = smr * stream.vol_both;
-                        }
-                        else if (stream.filter_type == 2)
-                        {
-							// High pass
-                            left = (buffer_left[index] - sml) * stream.vol_both;
-                            right = (buffer_right[index] - smr) * stream.vol_both;
-                        }
-                    }
-
-					left = Math.min(Math.max(left, -1), 1) * stream.vol_left_smooth;
-					right = Math.min(Math.max(right, -1), 1) * stream.vol_right_smooth;
-                }
-
-				if (stream.lfo_volume_time)
-				{
-					var res = (Math.sin((stream.position/audio.sampleRate)*10*stream.lfo_volume_time)*stream.lfo_volume_amount);
-					left *= res;
-					right *= res;
-				}
-
-                if (stream.use_echo)
-                {
-					var echo_index = (stream.position >> 0) % stream.echo_delay;
-
-                    echol[echo_index] = echol[echo_index] * stream.echo_feedback + left;
-                    echor[echo_index] = echor[echo_index] * stream.echo_feedback + right;
-
-                    output_left[j] += echol[echo_index];
-                    output_right[j] += echor[echo_index];
-                }
-                else
-                {
-                    output_left[j] += left;
-                    output_right[j] += right;
-                }
-
-				var speed = stream.speed_smooth;
-
-				if (stream.lfo_pitch_time)
-				{
-					speed -= (Math.sin((stream.position/audio.sampleRate)*10*stream.lfo_pitch_time)*stream.lfo_pitch_amount);
-					speed += Math.pow(stream.lfo_pitch_amount*0.5,2);
-				}
-
-                stream.position += speed;
-
-				var max = 1;
-
-				output_left[j] = Math.min(Math.max(output_left[j], -max), max);
-				output_right[j] = Math.min(Math.max(output_right[j], -max), max);
-
-				if (!isFinite(output_left[j])) {
-					output_left[j] = 0
-				}
-
-				if (!isFinite(output_right[j])) {
-					output_right[j] = 0
-				}
-            }
-        }
-    };
-
-    processor.connect(compressor);
-    compressor.connect(gain);
-    gain.connect(audio.destination);
-
-    lua.message("initialized", audio.sampleRate);
-}
-
-function close()
-{
-    if(audio)
-    {
-        audio.destination.disconnect();
-        audio = null;
-        lua.message("uninitialized");
-    }
-}
-
-var buffer_cache = new Object();
-
-function download_buffer(url, callback, skip_cache, id)
-{
-    if (!skip_cache && buffer_cache[url])
-    {
-        callback(buffer_cache[url]);
-
-        return;
-    }
-
-    var request = new XMLHttpRequest();
-
-    request.open("GET", url);
-    request.responseType = "arraybuffer";
-    request.send();
-
-    request.onload = function()
-    {
-        dprint("decoding " + url + " " + request.response.byteLength + " ...");
-
-        audio.decodeAudioData(request.response,
-
-            function(buffer)
-            {
-                dprint("decoded " + url + " successfully");
-
-                callback(buffer);
-
-                buffer_cache[url] = buffer;
-            },
-
-            function(err)
-            {
-                dprint("decoding error " + url + " " + err);
-				lua.message("stream", "call", id, "OnError", "decoding failed", err);
-            }
-        );
-    };
-
-    request.onprogress = function(event)
-    {
-        dprint("downloading " +  (event.loaded / event.total) * 100);
-    };
-
-    request.onerror = function()
-    {
-        dprint("downloading " + url + " errored");
-		lua.message("stream", "call", id, "OnError", "download failed: ", request.responseText);
-    };
-}
-
-function CreateStream(url, id, skip_cache)
-{
-    dprint("Loading " + url);
-
-    download_buffer(url, function(buffer)
-    {
-        var stream = {};
-
-        stream.id = id;
-        stream.position = 0;
-        stream.buffer = buffer;
-        stream.url = url;
-        stream.speed = 1; // 1 = normal pitch
-        stream.max_loop = 1; // -1 = inf
-        stream.vol_both = 1;
-        stream.vol_left = 1;
-        stream.vol_right = 1;
-        stream.paused = true;
-        stream.use_smoothing = true;
-        stream.echo_volume = 0;
-        stream.filter_type = 0;
-        stream.filter_fraction = 1;
-        stream.done_playing = false;
-
-        stream.use_echo = false;
-        stream.echo_feedback = 0.75;
-        stream.echo_buffer = false;
-
-        stream.vol_left_smooth = 0;
-        stream.vol_right_smooth = 0;
-        stream.speed_smooth = stream.speed;
-
-        stream.play = function(stop, position)
-        {
-			dprint("play " + stop + position)
-            if(position !== undefined)
-            {
-                stream.position = position;
-            }
-
-            stream.paused = !stop;
-        };
-
-        stream.usefft = function(enable)
-        {
-            // later
-        };
-
-		stream.useEcho = function(b) {
-			stream.use_echo = b;
-
-			if (b)
-			{
-				stream.setEchoDelay(stream.echo_delay);
-			}
-			else
-			{
-				stream.echo_buffer = undefined;
-			}
+		window.onerror = function(description, url, line) {
+			dprint("Unhandled exception at line " + line + ": " + description);
 		};
 
-        stream.setEchoDelay = function(x) {
-
-            if(stream.use_echo && (!stream.echo_buffer || (x != stream.echo_buffer.length))) {
-                var size = 1;
-
-                while((size <<= 1) < x);
-
-				stream.echo_buffer = audio.createBuffer(2, size, audio.sampleRate);
-            }
-
-            stream.echo_delay = x;
-        };
-
-        streams[id] = stream;
-        streams_array.push(stream);
-
-		dprint("created stream[" + id + "][" + stream.url + "]");
-        lua.message("stream", "loaded", id, buffer.length);
-
-		if (]==] .. (webaudio.debug and "true" or "false") .. [==[)
-		{
-			var size = 0, key;
-			for (key in streams) {
-				if (streams.hasOwnProperty(key)) size++;
+		function dprint(str) {
+			if (webaudio.debug) {
+				lua.print(str);
 			}
-			dprint("total stream count " + size)
 		}
 
-    }, skip_cache, id);
-}
+		var audio;
+		var gain;
+		var processor;
+		var streams = new Object();
+		var streams_array = [];
 
-function DestroyStream(id)
-{
-	var stream = streams[id];
-
-	if (stream)
-	{
-		dprint("destroying stream[" + id + "][" + stream.url + "]");
-
-		delete streams[id];
-		delete buffer_cache[stream.url];
-
-		var i = streams_array.indexOf(stream);
-		streams_array.splice(i, 1);
-
-		if (]==] .. (webaudio.debug and "true" or "false") .. [==[)
-		{
-			var size = 0, key;
-			for (key in streams) {
-				if (streams.hasOwnProperty(key)) size++;
+		function open() {
+			if (audio) {
+				audio.destination.disconnect();
 			}
-			dprint("total stream count " + size)
+
+			if (typeof AudioContext !== "undefined") {
+				audio = new AudioContext();
+				processor = audio.createScriptProcessor(webaudio.buffer_size, 2, 2);
+				gain = audio.createGain();
+				compressor = audio.createDynamicsCompressor();
+			} else {
+				audio = new webkitAudioContext();
+				processor = audio.createJavaScriptNode(webaudio.buffer_size, 2, 2);
+				gain = audio.createGainNode();
+				compressor = audio.createDynamicsCompressor();
+			}
+
+			processor.onaudioprocess = function(event) {
+				var output_left = event.outputBuffer.getChannelData(0);
+				var output_right = event.outputBuffer.getChannelData(1);
+
+				for (var i = 0; i < event.outputBuffer.length; ++i) {
+					output_left[i] = 0;
+					output_right[i] = 0;
+				}
+
+				for (var i = 0; i < streams_array.length; ++i) {
+					var stream = streams_array[i];
+
+					var buffer_length = stream.buffer.length;
+					var buffer_left = stream.buffer.getChannelData(0);
+					var buffer_right =
+						stream.buffer.numberOfChannels == 1
+							? buffer_left
+							: stream.buffer.getChannelData(1);
+
+					if (stream.use_smoothing) {
+						stream.speed_smooth =
+							stream.speed_smooth + (stream.speed - stream.speed_smooth) * 1;
+						stream.vol_left_smooth =
+							stream.vol_left_smooth +
+							(stream.vol_left - stream.vol_left_smooth) * 1;
+						stream.vol_right_smooth =
+							stream.vol_right_smooth +
+							(stream.vol_right - stream.vol_right_smooth) * 1;
+					} else {
+						stream.speed_smooth = stream.speed;
+						stream.vol_left_smooth = stream.vol_left_smooth;
+						stream.vol_right_smooth = stream.vol_right_smooth;
+					}
+
+					if (
+						!stream.use_echo &&
+						(stream.paused || (stream.vol_left < 0.001 && stream.vol_right < 0.001))
+					) {
+						continue;
+					}
+					var echol;
+					var echor;
+					if (stream.use_echo && stream.echo_buffer) {
+						echol = stream.echo_buffer.getChannelData(0);
+						echor = stream.echo_buffer.getChannelData(1);
+					}
+
+					var sml = 0;
+					var smr = 0;
+
+					for (var j = 0; j < event.outputBuffer.length; ++j) {
+						if (
+							stream.paused ||
+							(stream.max_loop > 0 &&
+								stream.position > buffer_length * stream.max_loop)
+						) {
+							stream.done_playing = true;
+
+							if (!stream.paused) {
+								stream.paused = true;
+							}
+
+							if (!stream.use_echo) {
+								break;
+							}
+						} else {
+							stream.done_playing = false;
+						}
+
+						var index = (stream.position >> 0) % buffer_length;
+
+						if (stream.reverse) {
+							index = -index + buffer_length;
+						}
+
+						var left = 0;
+						var right = 0;
+
+						if (!stream.done_playing) {
+							// filters
+							if (stream.filter_type == 0) {
+								// None
+								left = buffer_left[index] * stream.vol_both;
+								right = buffer_right[index] * stream.vol_both;
+							} else {
+								sml = sml + (buffer_left[index] - sml) * stream.filter_fraction;
+								smr = smr + (buffer_right[index] - smr) * stream.filter_fraction;
+
+								if (stream.filter_type == 1) {
+									// Low pass
+									left = sml * stream.vol_both;
+									right = smr * stream.vol_both;
+								} else if (stream.filter_type == 2) {
+									// High pass
+									left = (buffer_left[index] - sml) * stream.vol_both;
+									right = (buffer_right[index] - smr) * stream.vol_both;
+								}
+							}
+
+							left = Math.min(Math.max(left, -1), 1) * stream.vol_left_smooth;
+							right = Math.min(Math.max(right, -1), 1) * stream.vol_right_smooth;
+						}
+
+						if (stream.lfo_volume_time) {
+							var res =
+								Math.sin(
+									stream.position / audio.sampleRate * 10 * stream.lfo_volume_time
+								) * stream.lfo_volume_amount;
+							left *= res;
+							right *= res;
+						}
+
+						if (stream.use_echo) {
+							var echo_index = (stream.position >> 0) % stream.echo_delay;
+
+							echol[echo_index] = echol[echo_index] * stream.echo_feedback + left;
+							echor[echo_index] = echor[echo_index] * stream.echo_feedback + right;
+
+							output_left[j] += echol[echo_index];
+							output_right[j] += echor[echo_index];
+						} else {
+							output_left[j] += left;
+							output_right[j] += right;
+						}
+
+						var speed = stream.speed_smooth;
+
+						if (stream.lfo_pitch_time) {
+							speed -=
+								Math.sin(
+									stream.position / audio.sampleRate * 10 * stream.lfo_pitch_time
+								) * stream.lfo_pitch_amount;
+							speed += Math.pow(stream.lfo_pitch_amount * 0.5, 2);
+						}
+
+						stream.position += speed;
+
+						var max = 1;
+
+						output_left[j] = Math.min(Math.max(output_left[j], -max), max);
+						output_right[j] = Math.min(Math.max(output_right[j], -max), max);
+
+						if (!isFinite(output_left[j])) {
+							output_left[j] = 0;
+						}
+
+						if (!isFinite(output_right[j])) {
+							output_right[j] = 0;
+						}
+					}
+				}
+			};
+
+			processor.connect(compressor);
+			compressor.connect(gain);
+			gain.connect(audio.destination);
+
+			lua.message("initialized", audio.sampleRate);
 		}
-	}
-}
 
-open();
+		function close() {
+			if (audio) {
+				audio.destination.disconnect();
+				audio = null;
+				lua.message("uninitialized");
+			}
+		}
 
-]==])
+		var buffer_cache = new Object();
+
+		function download_buffer(url, callback, skip_cache, id) {
+			if (!skip_cache && buffer_cache[url]) {
+				callback(buffer_cache[url]);
+
+				return;
+			}
+
+			var request = new XMLHttpRequest();
+
+			request.open("GET", url);
+			request.responseType = "arraybuffer";
+			request.send();
+
+			request.onload = function() {
+				dprint("decoding " + url + " " + request.response.byteLength + " ...");
+
+				audio.decodeAudioData(
+					request.response,
+
+					function(buffer) {
+						dprint("decoded " + url + " successfully");
+
+						callback(buffer);
+
+						buffer_cache[url] = buffer;
+					},
+
+					function(err) {
+						dprint("decoding error " + url + " " + err);
+						lua.message("stream", "call", id, "OnError", "decoding failed", err);
+					}
+				);
+			};
+
+			request.onprogress = function(event) {
+				dprint("downloading " + event.loaded / event.total * 100);
+			};
+
+			request.onerror = function() {
+				dprint("downloading " + url + " errored");
+				lua.message(
+					"stream",
+					"call",
+					id,
+					"OnError",
+					"download failed: ",
+					request.responseText
+				);
+			};
+		}
+
+		function CreateStream(url, id, skip_cache) {
+			dprint("Loading " + url);
+
+			download_buffer(
+				url,
+				function(buffer) {
+					var stream = {};
+
+					stream.id = id;
+					stream.position = 0;
+					stream.buffer = buffer;
+					stream.url = url;
+					stream.speed = 1; // 1 = normal pitch
+					stream.max_loop = 1; // -1 = inf
+					stream.vol_both = 1;
+					stream.vol_left = 1;
+					stream.vol_right = 1;
+					stream.paused = true;
+					stream.use_smoothing = true;
+					stream.echo_volume = 0;
+					stream.filter_type = 0;
+					stream.filter_fraction = 1;
+					stream.done_playing = false;
+
+					stream.use_echo = false;
+					stream.echo_feedback = 0.75;
+					stream.echo_buffer = false;
+
+					stream.vol_left_smooth = 0;
+					stream.vol_right_smooth = 0;
+					stream.speed_smooth = stream.speed;
+
+					stream.play = function(stop, position) {
+						dprint("play " + stop + position);
+						if (position !== undefined) {
+							stream.position = position;
+						}
+
+						stream.paused = !stop;
+					};
+
+					stream.usefft = function(enable) {
+						// later
+					};
+
+					stream.useEcho = function(b) {
+						stream.use_echo = b;
+
+						if (b) {
+							stream.setEchoDelay(stream.echo_delay);
+						} else {
+							stream.echo_buffer = undefined;
+						}
+					};
+
+					stream.setEchoDelay = function(x) {
+						if (
+							stream.use_echo &&
+							(!stream.echo_buffer || x != stream.echo_buffer.length)
+						) {
+							var size = 1;
+
+							while ((size <<= 1) < x);
+
+							stream.echo_buffer = audio.createBuffer(2, size, audio.sampleRate);
+						}
+
+						stream.echo_delay = x;
+					};
+
+					streams[id] = stream;
+					streams_array.push(stream);
+
+					dprint("created stream[" + id + "][" + stream.url + "]");
+					lua.message("stream", "loaded", id, buffer.length);
+
+					if (webaudio.debug) {
+						var size = 0,
+							key;
+						for (key in streams) {
+							if (streams.hasOwnProperty(key)) size++;
+						}
+						dprint("total stream count " + size);
+					}
+				},
+				skip_cache,
+				id
+			);
+		}
+
+		function DestroyStream(id) {
+			var stream = streams[id];
+
+			if (stream) {
+				dprint("destroying stream[" + id + "][" + stream.url + "]");
+
+				delete streams[id];
+				delete buffer_cache[stream.url];
+
+				var i = streams_array.indexOf(stream);
+				streams_array.splice(i, 1);
+
+				if (webaudio.debug) {
+					var size = 0,
+						key;
+					for (key in streams) {
+						if (streams.hasOwnProperty(key)) size++;
+					}
+					dprint("total stream count " + size);
+				}
+			}
+		}
+
+		open();
+
+	]]
+	local js = [[
+		var webaudio = {
+			debug: ]] .. (webaudio.debug and "true" or "false") .. [[,
+			buffer_size: ]] .. webaudio.buffer_size:GetInt() .. [[,
+		};
+	]] .. webaudioJavascript
 
 	webaudio.browser_panel.OnFinishLoadingDocument = function(self)
 		self.OnFinishLoadingDocument = nil
@@ -660,7 +653,17 @@ do
 	function META:Call(fmt, ...)
 		if not self.Loaded then return end
 
-		local code = string.format("var id = %d; try { if (streams[id]) { streams[id]%s } } catch(e) { dprint('streams[' + id + '] ' + e.toString()) }", self:GetId(), string.format(fmt, ...))
+		local code = string.format([[
+				var id = %d;
+				try {
+					if (streams[id]) { streams[id]%s }
+				} catch(e) {
+					dprint('streams[' + id + '] ' + e.toString())
+				};
+			]],
+			self:GetId(),
+			string.format(fmt, ...)
+		)
 
 		run_javascript(code)
 	end
@@ -821,8 +824,8 @@ do
 	end
 
 	function META:UpdateVolumeFlat()
-		self:SetRightVolume((math.Clamp(1 + self.Panning, 0, 1)) + self.AdditiveVolumeFraction)
-		self:SetLeftVolume((math.Clamp(1 - self.Panning, 0, 1)) + self.AdditiveVolumeFraction)
+		self:SetRightVolume(math.Clamp(1 + self.Panning, 0, 1) + self.AdditiveVolumeFraction)
+		self:SetLeftVolume(math.Clamp(1 - self.Panning, 0, 1) + self.AdditiveVolumeFraction)
 	end
 
 	function META:UpdateVolumeBoth()
