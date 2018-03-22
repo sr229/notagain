@@ -99,6 +99,9 @@ local function player_say(ply, str)
 	if str:Trim():find("^<.*>$") then return end
 	if aowl and aowl.Prefix and str:find("^" .. aowl.Prefix) then return end
 
+	if ply:IsDormant() then return end
+	if LocalPlayer():EyePos():Distance(ply:EyePos()) > 2500 then return end
+
 	env.audio.player_object = ply
 	env.chatsounds.Say(str, math.Round(CurTime()))
 end
