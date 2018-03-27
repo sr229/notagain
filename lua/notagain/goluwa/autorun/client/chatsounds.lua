@@ -92,16 +92,16 @@ local function player_say(ply, str)
 		init = true
 	end
 
-	if str == "sh" or (str:find("sh%s") and not str:find("%Ssh")) or (str:find("%ssh") and not str:find("sh%S")) then
-		env.audio.Panic()
-	end
-
 	if str:Trim():find("^<.*>$") then return end
 	if aowl and aowl.Prefix and str:find("^" .. aowl.Prefix) then return end
 
 	if not IsValid(ply) then return end
 	if ply:IsDormant() then return end
 	if LocalPlayer():EyePos():Distance(ply:EyePos()) > 2500 then return end
+
+	if str == "sh" or (str:find("sh%s") and not str:find("%Ssh")) or (str:find("%ssh") and not str:find("sh%S")) then
+		env.audio.Panic()
+	end
 
 	env.audio.player_object = ply
 	env.chatsounds.Say(str, math.Round(CurTime()))
