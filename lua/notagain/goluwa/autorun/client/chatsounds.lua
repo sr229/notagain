@@ -71,6 +71,7 @@ end
 local init = false
 
 local function player_say(ply, str)
+	str = str:lower()
 	if not init then
 		env.chatsounds.Initialize()
 
