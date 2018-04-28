@@ -1026,7 +1026,7 @@ function goluwa.SetEnv()
 end
 
 if CLIENT then
-	goluwa.Update(goluwa.Initialize, "0e40ee8b")
+	goluwa.Update(goluwa.Initialize, "1d750df2")
 end
 
 if game.IsDedicated() or CLIENT then
