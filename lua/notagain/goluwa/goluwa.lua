@@ -73,7 +73,7 @@ do
 		end)
 	end
 
-	function goluwa.Update(cb)
+	function goluwa.Update(cb, forced_tag)
 		file.CreateDir("goluwa")
 
 		if file.IsDir("addons/goluwa", "MOD") then
@@ -83,6 +83,19 @@ do
 		end
 
 		file.CreateDir("goluwa/goluwa")
+
+		if forced_tag then
+			if file.Read("goluwa/update_id.txt", "DATA") == forced_tag then
+				cb()
+			else
+				dprint("release tag id is different, redownloading")
+				redownload(forced_tag, function()
+					cb()
+					file.Write("goluwa/update_id.txt", forced_tag)
+				end)
+			end
+			return
+		end
 
 		http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/tags", function(data, _, _, code)
 			if code ~= 200 then
@@ -1013,7 +1026,7 @@ function goluwa.SetEnv()
 end
 
 if CLIENT then
-	goluwa.Update(goluwa.Initialize)
+	goluwa.Update(goluwa.Initialize, "0e40ee8b")
 end
 
 if game.IsDedicated() or CLIENT then
