@@ -39,7 +39,7 @@ do
 		end)
 
 		hook.Add("ChatTextChanged", "chatsounds_autocomplete", function(str)
-			if str == "" then
+			if str == "" or string.find(str, "\n", 1, true) then
 				random_mode = true
 				return
 			end
