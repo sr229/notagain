@@ -93,6 +93,12 @@ local function player_say(ply, str)
 		init = true
 	end
 
+	local info = {
+		ply = ply,
+		line = str,
+	}
+
+	if hook.Run("PreChatSound", info) == false then return end -- attempt to preserve old structure for compatibility reasons
 	if str:Trim():find("^<.*>$") then return end
 	if aowl and aowl.Prefix and str:find("^" .. aowl.Prefix) then return end
 
@@ -106,6 +112,8 @@ local function player_say(ply, str)
 
 	env.audio.player_object = ply
 	env.chatsounds.Say(str, math.Round(CurTime()))
+
+	hook.Run("PostChatSound", info)
 end
 
 hook.Add("OnPlayerChat", "chatsounds", player_say)
