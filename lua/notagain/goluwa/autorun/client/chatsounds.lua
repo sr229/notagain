@@ -117,7 +117,21 @@ local function player_say(ply, str)
 end
 
 hook.Add("OnPlayerChat", "chatsounds", player_say)
-concommand.Add("saysound",function(ply, _,_, str)
+
+concommand.Add("saysound", function(ply, _,_, str)
+	net.Start("newchatsounds")
+		-- cut to 32KB
+		net.WriteString(str:sub(1, 64000 - 32 - 32000))
+	net.SendToServer()
+
+	player_say(ply, str)
+end)
+
+net.Receive("newchatsounds", function()
+	local ply = net.ReadEntity()
+	if not ply:IsValid() then return end
+
+	local str = net.ReadString()
 	player_say(ply, str)
 end)
 
