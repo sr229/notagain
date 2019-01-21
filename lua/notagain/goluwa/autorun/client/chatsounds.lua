@@ -71,6 +71,8 @@ end
 local init = false
 
 local function player_say(ply, str)
+	if not chatsounds_enabled:GetBool() then return end
+
 	str = str:lower()
 	if not init then
 		env.chatsounds.Initialize()
@@ -88,7 +90,7 @@ local function player_say(ply, str)
 		env.chatsounds.BuildFromGithub("PAC3-Server/chatsounds")
 		env.chatsounds.BuildFromGithub("Metastruct/garrysmod-chatsounds", "sound/chatsounds/autoadd")
 
-		hook.Run("ChatsoundsInitialized")
+		hook.Run("ChatSoundsInitialized")
 
 		init = true
 	end
@@ -119,12 +121,13 @@ end
 hook.Add("OnPlayerChat", "chatsounds", player_say)
 
 concommand.Add("saysound", function(ply, _,_, str)
-	net.Start("newchatsounds")
-		-- cut to 32KB
-		net.WriteString(str:sub(1, 64000 - 32 - 32000))
-	net.SendToServer()
-
 	player_say(ply, str)
+
+	if util.NetworkStringToID("newchatsounds") > 0 then	-- If the server has added the NetworkString
+		net.Start("newchatsounds")
+			net.WriteString(str:sub(1, 64000-32-32000))	-- Cut to 32KB
+		net.SendToServer()
+	end
 end)
 
 net.Receive("newchatsounds", function()
