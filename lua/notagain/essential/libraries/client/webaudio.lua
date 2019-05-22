@@ -118,10 +118,14 @@ function webaudio.Initialize()
 	end
 
 	webaudio.browser_panel = vgui.Create("DHTML")
-	webaudio.browser_panel:SetVisible(false)
+	webaudio.browser_panel:SetVisible(true)
 	webaudio.browser_panel:SetPos(ScrW(), ScrH())
 	webaudio.browser_panel:SetSize(1, 1)
-
+	webaudio.browser_panel:ParentToHUD()
+	webaudio.browser_panel:SetAlpha(1)
+	webaudio.browser_panel:SetPaintedManually(true)
+	webaudio.browser_panel:SetVerticalScrollbarEnabled(false)
+	
 	local Browser = webaudio.browser_panel
 	
 	function Browser:FixAutoplay()
