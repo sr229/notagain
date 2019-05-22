@@ -122,6 +122,40 @@ function webaudio.Initialize()
 	webaudio.browser_panel:SetPos(ScrW(), ScrH())
 	webaudio.browser_panel:SetSize(1, 1)
 
+	local Browser = webaudio.browser_panel
+	
+	function Browser:FixAutoplay()
+		print("fixautoplay wa",self)
+		self.autoplayfix = 0
+	end
+	
+	function Browser:FixAutoplayThink()
+		if not self.autoplayfix then return end
+		self.autoplayfix = self.autoplayfix + 1
+		if self.autoplayfix == 1 then
+			self:MouseCapture(true)
+			
+			self.apMouseEnabled = self:IsMouseInputEnabled()
+		
+			self:SetMouseInputEnabled(true)
+			gui.EnableScreenClicker(true)
+			gui.InternalCursorMoved(0, 0)
+			gui.InternalMousePressed(MOUSE_LEFT)
+			gui.InternalMouseReleased(MOUSE_LEFT)
+		elseif self.autoplayfix == 2 then
+			gui.EnableScreenClicker(false)
+			print("apfix 2",self)
+			self:SetMouseInputEnabled(self.apMouseEnabled)
+			self:MouseCapture(false)
+			self.autoplayfix = false
+		end
+	end
+
+	function Browser:Think()
+		self:FixAutoplayThink()
+	end
+	
+	
 	local last_message = nil
 	webaudio.browser_panel.ConsoleMessage = function(self, message, _, line)
 		-- why does awesomium crash in the first place?
@@ -540,6 +574,7 @@ function webaudio.Initialize()
 	webaudio.browser_panel.OnFinishLoadingDocument = function(self)
 		self.OnFinishLoadingDocument = nil
 
+		self:FixAutoplay()
 		dprint("OnFinishLoadingDocument")
 		webaudio.browser_panel:RunJavascript(js)
 	end
