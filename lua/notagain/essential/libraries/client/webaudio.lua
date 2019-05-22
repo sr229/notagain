@@ -151,7 +151,9 @@ function webaudio.Initialize()
 			print("apfix 2",self)
 			self:SetMouseInputEnabled(self.apMouseEnabled)
 			self:MouseCapture(false)
+		elseif self.autoplayfix == 3 then
 			self.autoplayfix = false
+			self:AutoPlayFixed()
 		end
 	end
 
@@ -580,9 +582,13 @@ function webaudio.Initialize()
 
 		self:FixAutoplay()
 		dprint("OnFinishLoadingDocument")
+	end
+	
+	function webaudio.browser_panel:AutoPlayFixed()
+		dprint("AutoPlayFixed -> running init...")
 		webaudio.browser_panel:RunJavascript(js)
 	end
-
+	
 	file.Write("webaudio_blankhtml.txt", "<html></html>")
 	webaudio.browser_panel:OpenURL("asset://garrysmod/data/webaudio_blankhtml.txt")
 
