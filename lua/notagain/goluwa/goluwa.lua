@@ -511,12 +511,12 @@ function goluwa.CreateEnv()
 	env.runfile("core/lua/libraries/platforms/gmod/globals.lua")
 	env.fs = env.runfile("core/lua/libraries/platforms/gmod/filesystem.lua")
 
-	env.fs.createdir(env.e.STORAGE_FOLDER)
-	env.fs.createdir(env.e.STORAGE_FOLDER .. "/userdata/")
-	env.fs.createdir(env.e.USERDATA_FOLDER)
-	env.fs.createdir(env.e.CACHE_FOLDER)
-	env.fs.createdir(env.e.SHARED_FOLDER)
-	env.fs.createdir(env.e.TEMP_FOLDER)
+	env.fs.create_directory(env.e.STORAGE_FOLDER)
+	env.fs.create_directory(env.e.STORAGE_FOLDER .. "/userdata/")
+	env.fs.create_directory(env.e.USERDATA_FOLDER)
+	env.fs.create_directory(env.e.CACHE_FOLDER)
+	env.fs.create_directory(env.e.SHARED_FOLDER)
+	env.fs.create_directory(env.e.TEMP_FOLDER)
 
 	env.runfile("core/lua/libraries/platforms/gmod/os.lua", env.os)
 
@@ -583,12 +583,11 @@ function goluwa.CreateEnv()
 
 	env.R = env.vfs.GetAbsolutePath -- a nice global for loading resources externally from current dir
 	env.crypto = env.runfile("core/lua/libraries/crypto.lua")
+	env.tasks = env.runfile("core/lua/libraries/tasks.lua")
 
 	env.pvars = env.runfile("engine/lua/libraries/pvars.lua")
 	env.commands = env.runfile("engine/lua/libraries/commands.lua")
 	for i, args in ipairs(commands_add_buffer) do env.commands.Add(unpack(args)) end
-
-	env.tasks = env.runfile("framework/lua/libraries/tasks.lua")
 
 	env.system = env.runfile("core/lua/libraries/system.lua")
 
