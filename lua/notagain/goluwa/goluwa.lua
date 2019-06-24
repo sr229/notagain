@@ -1072,7 +1072,7 @@ function goluwa.SetEnv()
 end
 
 if CLIENT then
-	goluwa.Update(goluwa.Initialize)
+	goluwa.Update(goluwa.Initialize, "develop")
 end
 
 if game.IsDedicated() or CLIENT then
