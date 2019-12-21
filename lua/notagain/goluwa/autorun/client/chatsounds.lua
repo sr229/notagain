@@ -108,12 +108,12 @@ end
 hook.Add("OnPlayerChat", "chatsounds", player_say)
 
 concommand.Add("saysound", function(ply, _,_, str)
-	player_say(ply, str)
-
 	if util.NetworkStringToID("newchatsounds") > 0 then	-- If the server has added the NetworkString
 		net.Start("newchatsounds")
 			net.WriteString(str:sub(1, 64000-32-32000))	-- Cut to 32KB
 		net.SendToServer()
+	else
+		player_say(ply, str)
 	end
 end)
 
