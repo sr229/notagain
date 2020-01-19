@@ -100,7 +100,7 @@ local function player_say(ply, str)
 	end
 
 	env.audio.player_object = ply
-	env.chatsounds.Say(str, math.Round(CurTime()))
+	info.script = env.chatsounds.Say(str, math.Round(CurTime()))
 
 	hook.Run("PostChatSound", info)
 end
