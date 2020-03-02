@@ -632,7 +632,7 @@ function goluwa.CreateEnv()
 		env.http = env.runfile("core/lua/libraries/http.lua")
 
 		function sockets.Request(tbl)
-			tbl.callback = tbl.callback or env.table.print
+			tbl.callback = tbl.callback or function() end
 			tbl.method = tbl.method or "GET"
 
 			if tbl.timeout and tbl.timedout_callback then
