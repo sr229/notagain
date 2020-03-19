@@ -643,7 +643,11 @@ function goluwa.CreateEnv()
 				end)
 			end
 
-			tbl.url = tbl.url:gsub(" ", "%%20"):gsub("%.", "%%2E")
+			tbl.url = tbl.url:gsub(" ", "%%20")
+			local host, path = tbl.url:match("^(.-://.-/)(.*)$")
+			if host and path then
+				tbl.url = host .. path:gsub("%.", "%%2E")
+			end
 
 			--print("HTTP: " .. tbl.url)
 
