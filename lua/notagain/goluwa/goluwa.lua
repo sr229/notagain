@@ -632,7 +632,7 @@ function goluwa.CreateEnv()
 		env.http = env.runfile("core/lua/libraries/http.lua")
 
 		function sockets.Request(tbl)
-			tbl.callback = tbl.callback or function() end
+			tbl.callback = tbl.callback or env.table.print
 			tbl.method = tbl.method or "GET"
 
 			if tbl.timeout and tbl.timedout_callback then
@@ -643,7 +643,7 @@ function goluwa.CreateEnv()
 				end)
 			end
 
-			tbl.url = tbl.url:gsub(" ", "%%20")
+			tbl.url = tbl.url:gsub(" ", "%%20"):gsub("%.", "%%2E")
 
 			--print("HTTP: " .. tbl.url)
 
@@ -1068,7 +1068,7 @@ function goluwa.SetEnv()
 end
 
 if CLIENT then
-	goluwa.Update(goluwa.Initialize)
+	goluwa.Update(goluwa.Initialize, "develop")
 end
 
 if game.IsDedicated() or CLIENT then
