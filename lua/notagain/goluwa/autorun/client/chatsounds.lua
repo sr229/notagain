@@ -120,6 +120,7 @@ end)
 net.Receive("newchatsounds", function()
 	local ply = net.ReadEntity()
 	if not ply:IsValid() then return end
+	if ply.__chatsounds_gagged then return end
 
 	local str = net.ReadString()
 	player_say(ply, str)
