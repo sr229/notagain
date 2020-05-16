@@ -14,6 +14,8 @@ end
 
 local delete_directory
 
+local branch = CreateClientConVar("goluwa_branch", "release")
+
 do
 	function delete_directory(dir)
 		local files, folders = file.Find(dir .. "*", "DATA")
@@ -78,7 +80,7 @@ do
 	function goluwa.Update(cb, forced_tag)
 		file.CreateDir("goluwa")
 
-		if file.IsDir("addons/goluwa", "MOD") then
+		if not GOLUWA_FORCE_DOWNLOAD and file.IsDir("addons/goluwa", "MOD") then
 			goluwa.addon_directory = true
 			cb()
 			return
@@ -86,66 +88,63 @@ do
 
 		file.CreateDir("goluwa/goluwa")
 
-		if forced_tag then
-			if file.Read("goluwa/update_id.txt", "DATA") == forced_tag then
-				cb()
-			else
-				dprint("release tag id is different, redownloading")
-				redownload(forced_tag, function()
-					cb()
-					file.Write("goluwa/update_id.txt", forced_tag)
-				end)
-			end
-			return
-		end
+		local function rolling()
+			local branch = branch:GetString()
 
-		http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/tags", function(data, _, _, code)
-			if code ~= 200 then
-				ErrorNoHalt("goluwa: " .. data)
-				return
-			end
+			http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/commits/" .. branch, function(data, _, _, code)
+				if code ~= 200 then
+					ErrorNoHalt("goluwa: " .. data)
+					return
+				end
 
-			local tags = util.JSONToTable(data)
-			local tag = tags and tags[1]
+				local last_commit = util.JSONToTable(data)
 
-			if tag then
-				if not file.IsDir("goluwa/goluwa", "DATA") or not file.IsDir("goluwa/goluwa/core", "DATA") then
-					dprint("missing goluwa directory, redownloading")
-					redownload(tag.commit.id, function()
-						cb()
-						file.Write("goluwa/update_id.txt", tag.commit.id)
-					end)
-				elseif file.Read("goluwa/update_id.txt", "DATA") == tag.commit.id then
+				if file.Read("goluwa/update_id.txt") == last_commit.id then
 					cb()
 				else
-					dprint("release tag id is different, redownloading")
-					redownload(tag.commit.id, function()
+					dprint("last commit is different, redownloading")
+					redownload(branch, function()
 						cb()
-						file.Write("goluwa/update_id.txt", tag.commit.id)
+						file.Write("goluwa/update_id.txt", last_commit.id)
 					end)
 				end
-			else
-				dprint("no release tag found, assume rolling release")
-				http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/commits", function(data, _, _, code)
-					if code ~= 200 then
-						ErrorNoHalt("goluwa: " .. data)
-						return
-					end
+			end)
+		end
 
-					local commits = util.JSONToTable(data)
+		if branch:GetString() == "release" then
+			http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/tags", function(data, _, _, code)
+				if code ~= 200 then
+					ErrorNoHalt("goluwa: " .. data)
+					return
+				end
 
-					if file.Read("goluwa/update_id.txt") == commits[1].id then
+				local tags = util.JSONToTable(data)
+				local tag = tags and tags[1]
+
+				if tag then
+					if not file.IsDir("goluwa/goluwa", "DATA") or not file.IsDir("goluwa/goluwa/core", "DATA") then
+						dprint("missing goluwa directory, redownloading")
+						redownload(tag.commit.id, function()
+							cb()
+							file.Write("goluwa/update_id.txt", tag.commit.id)
+						end)
+					elseif file.Read("goluwa/update_id.txt", "DATA") == tag.commit.id then
 						cb()
 					else
-						dprint("last commit is different, redownloading")
-						redownload("master", function()
+						dprint("release tag id is different, redownloading")
+						redownload(tag.commit.id, function()
 							cb()
-							file.Write("goluwa/update_id.txt", commits[1].id)
+							file.Write("goluwa/update_id.txt", tag.commit.id)
 						end)
 					end
-				end)
-			end
-		end)
+				else
+					dprint("no release tag found, assume rolling release")
+					rolling()
+				end
+			end)
+		else
+			rolling()
+		end
 	end
 end
 
@@ -632,7 +631,7 @@ function goluwa.CreateEnv()
 		env.http = env.runfile("core/lua/libraries/http.lua")
 
 		function sockets.Request(tbl)
-			tbl.callback = tbl.callback or function() end
+			--tbl.callback = tbl.callback or function() end
 			tbl.method = tbl.method or "GET"
 
 			if tbl.timeout and tbl.timedout_callback then
@@ -673,7 +672,9 @@ function goluwa.CreateEnv()
 								tbl.on_chunks(body)
 							end
 
-							tbl.callback({content = body, header = copy, code = code})
+							if tbl.callback then
+								tbl.callback({content = body, header = copy, code = code})
+							end
 						end
 					end
 				end,
@@ -1073,6 +1074,10 @@ end
 
 if CLIENT then
 	goluwa.Update(goluwa.Initialize)
+end
+
+if SERVER then
+	notagain.AutorunDirectory("goluwa")
 end
 
 if game.IsDedicated() or CLIENT then
