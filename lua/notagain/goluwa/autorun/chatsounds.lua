@@ -222,13 +222,24 @@ if CLIENT then
             init = true
         end
 
-        if str == "sh" or (str:find("sh%s") and not str:find("%Ssh")) or (str:find("%ssh") and not str:find("sh%S")) then
-            env.audio.Panic()
-        end
+        local info = {
+            ply = ply,
+            line = str,
+        }
+
+        if hook.Run("PreChatSound", info) == false then return end
 
         if str:Trim():find("^<.*>$") then return end
         if str:find("^%p") then return end
+        if str:find("^[!/%.]") then return end
 
+        if not IsValid(ply) then return end
+        if ply:IsDormant() then return end
+        if LocalPlayer():EyePos():Distance(ply:EyePos()) > 2500 then return end
+
+        if str == "sh" or (str:find("sh%s") and not str:find("%Ssh")) or (str:find("%ssh") and not str:find("sh%S")) then
+            env.audio.Panic()
+        end
 
         local ids = {}
         for _, subscription in ipairs(userdata.Get(ply, "chatsounds_subscriptions")) do
@@ -237,11 +248,27 @@ if CLIENT then
 
         env.audio.player_object = ply
         env.chatsounds.Say(str, math.Round(CurTime()), ids)
+
+        hook.Run("PostChatSound", info)
     end
 
     hook.Add("OnPlayerChat", "chatsounds", player_say)
 
     concommand.Add("saysound",function(ply, _,_, str)
+        player_say(ply, str)
+
+        if util.NetworkStringToID("newchatsounds") > 0 then -- If the server has added the NetworkString
+            net.Start("newchatsounds")
+                net.WriteString(str:sub(1, 64000 - 32 - 32000)) -- Cut to 32KB
+            net.SendToServer()
+        end
+    end)
+
+    net.Receive("newchatsounds", function()
+        local ply = net.ReadEntity()
+        if not ply:IsValid() then return end
+
+        local str = net.ReadString()
         player_say(ply, str)
     end)
 
