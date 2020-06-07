@@ -230,7 +230,6 @@ if CLIENT then
         if hook.Run("PreChatSound", info) == false then return end
 
         if str:Trim():find("^<.*>$") then return end
-        if str:find("^%p") then return end
         if str:find("^[!/%.]") then return end
 
         if not IsValid(ply) then return end
