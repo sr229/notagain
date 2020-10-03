@@ -167,6 +167,7 @@ if CLIENT then
             if not chatsounds_enabled:GetBool() then return end
 
             hook.Add("OnChatTab", "chatsounds_autocomplete", function(str)
+		if str:Trim():find("[\r\n]") then str = "" end
                 if str == "random" or random_mode then
                     random_mode = true
                     query("", 0)
@@ -187,6 +188,7 @@ if CLIENT then
                 end
 
                 random_mode = false
+		if str:Trim():find("[\r\n]") then str = "" end
                 query(str, 0)
             end)
 
