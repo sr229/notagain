@@ -188,7 +188,9 @@ if CLIENT then
                 end
 
                 random_mode = false
-		if str:Trim():find("[\r\n]") then str = "" end
+		if str:find("^[!/%.]") 
+		or str:find("[\r\n]")
+		or str:find("https?://") then found_autocomplete={} return end
                 query(str, 0)
             end)
 
@@ -233,7 +235,7 @@ if CLIENT then
 
         if str:Trim():find("^<.*>$") then return end
         if str:find("^[!/%.]") then return end
-        if str:find("http?s://") then return end
+        if str:find("https?://") then return end
 
         if not IsValid(ply) then return end
         if ply:IsDormant() then return end
