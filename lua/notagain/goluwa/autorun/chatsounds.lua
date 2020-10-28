@@ -233,6 +233,7 @@ if CLIENT then
 
         if str:Trim():find("^<.*>$") then return end
         if str:find("^[!/%.]") then return end
+        if str:find("http?s://") then return end
 
         if not IsValid(ply) then return end
         if ply:IsDormant() then return end
