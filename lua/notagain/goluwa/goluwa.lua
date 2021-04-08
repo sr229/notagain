@@ -9,7 +9,7 @@ local goluwa = {}
 goluwa.notagain_autorun = false
 
 local function dprint(...)
-	print("goluwa: ", ...)
+	print("[goluwa]: ", ...)
 end
 
 local delete_directory
@@ -37,7 +37,7 @@ do
 		tag = tag or "master"
 		http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/archive.zip?sha=" .. tag, function(data, _, _, code)
 			if code ~= 200 then
-				ErrorNoHalt("goluwa: " .. data)
+				ErrorNoHalt("[goluwa http]: Download Failed: " .. data)
 				return
 			end
 
@@ -93,7 +93,7 @@ do
 
 			http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/commits/" .. branch, function(data, _, _, code)
 				if code ~= 200 then
-					ErrorNoHalt("goluwa: " .. data)
+					ErrorNoHalt("[goluwa http]: Download Failed: " .. data)
 					return
 				end
 
@@ -114,7 +114,7 @@ do
 		if branch:GetString() == "release" then
 			http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/tags", function(data, _, _, code)
 				if code ~= 200 then
-					ErrorNoHalt("goluwa: " .. data)
+					ErrorNoHalt("[goluwa http]: Download Failed: " .. data)
 					return
 				end
 
@@ -288,7 +288,7 @@ function goluwa.CreateEnv()
 				end
 			end
 
-			print("[goluwa] runfile: unable to find " .. original_path)
+			print("[goluwa runfile]: unable to find " .. original_path)
 		end
 	end
 
