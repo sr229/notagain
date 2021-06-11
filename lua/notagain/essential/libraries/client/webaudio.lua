@@ -3,8 +3,9 @@ local webaudio = {}
 webaudio.sample_rate = nil
 webaudio.speed_of_sound = CreateClientConVar("webaudio_doppler", "800", true)
 webaudio.buffer_size = CreateClientConVar("webaudio_buffer_size", "2048", true)
-webaudio.volume = CreateClientConVar("webaudio_volume", "1", true, false, "Sets the Volume from 0-1")
 webaudio.debug = CreateClientConVar("webaudio_debug", "0")
+webaudio.volmod = CreateClientConVar("webaudio_volume", "1", true, false, "Sets the Volume from 0-1")
+webaudio.volume = 1
 
 local function logn(str)
 	MsgC(Color(0, 255, 0), "[webaudio] ")
@@ -71,7 +72,7 @@ do
 		if not system.HasFocus() and GetConVar("snd_mute_losefocus"):GetBool() then
 			webaudio.SetVolume(0)
 		else
-			webaudio.SetVolume(GetConVar("volume"):GetFloat() * GetConVar("webaudio_volume"):GetFloat())
+			webaudio.SetVolume(GetConVar("volume"):GetFloat())
 		end
 
 		local time = RealTime()
@@ -603,10 +604,11 @@ end
 
 -- Audio
 function webaudio.SetVolume(vol)
-	if webaudio.volume:GetFloat() ~= vol then
-		webaudio.volume:SetFloat(vol)
-		dprint("setting volume to " .. vol)
-		run_javascript(string.format("gain.gain.value = %f", vol))
+	if webaudio.volume ~= vol then
+		webaudio.volume = vol
+		local mod = webaudio.volmod:GetFloat()
+		dprint("setting volume to " .. vol * mod)
+		run_javascript(string.format("gain.gain.value = %f", vol * mod))
 	end
 end
 
