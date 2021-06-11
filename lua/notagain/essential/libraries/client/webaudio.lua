@@ -25,6 +25,11 @@ cvars.AddChangeCallback("webaudio_buffer_size", function(_,_,val)
 	webaudio.Initialize()
 end)
 
+cvars.AddChangeCallback("webaudio_volume", function(_,_,val)
+	dprint("volume modifier set to " .. val)
+	webaudio.SetVolume(val)
+end)
+
 if webaudio.browser_panel and webaudio.browser_panel:IsValid() then
 	webaudio.browser_panel:Remove()
 	webaudio.browser_panel = nil
