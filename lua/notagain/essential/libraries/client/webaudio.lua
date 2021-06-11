@@ -4,6 +4,7 @@ webaudio.sample_rate = nil
 webaudio.speed_of_sound = CreateClientConVar("webaudio_doppler", "800", true)
 webaudio.buffer_size = CreateClientConVar("webaudio_buffer_size", "2048", true)
 webaudio.volume = CreateClientConVar("webaudio_volume", "1", true, false, "Sets the Volume from 0-1")
+webaudio.debug = CreateClientConVar("webaudio_debug", "0")
 
 local function logn(str)
 	MsgC(Color(0, 255, 0), "[webaudio] ")
@@ -12,7 +13,7 @@ local function logn(str)
 end
 
 local function dprint(str)
-	if webaudio.debug then
+	if webaudio.debug:GetBool() then
 		logn(str)
 	end
 end
@@ -572,7 +573,7 @@ function webaudio.Initialize()
 	]]
 	local js = [[
 		var webaudio = {
-			debug: ]] .. (webaudio.debug and "true" or "false") .. [[,
+			debug: ]] .. (webaudio.debug:GetBool() and "true" or "false") .. [[,
 			buffer_size: ]] .. webaudio.buffer_size:GetInt() .. [[,
 		};
 	]] .. webaudioJavascript
