@@ -605,6 +605,7 @@ end
 function webaudio.SetVolume(vol)
 	if webaudio.volume:GetFloat() ~= vol then
 		webaudio.volume:SetFloat(vol)
+		dprint("setting volume to " .. vol)
 		run_javascript(string.format("gain.gain.value = %f", vol))
 	end
 end
