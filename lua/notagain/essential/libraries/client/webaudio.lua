@@ -70,7 +70,7 @@ do
 		if not system.HasFocus() and GetConVar("snd_mute_losefocus"):GetBool() then
 			webaudio.SetVolume(0)
 		else
-			webaudio.SetVolume(GetConVar("volume") * GetConVar("webaudio_volume"):GetFloat())
+			webaudio.SetVolume(GetConVar("volume"):GetFloat() * GetConVar("webaudio_volume"):GetFloat())
 		end
 
 		local time = RealTime()
