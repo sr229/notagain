@@ -124,7 +124,7 @@ function webaudio.Initialize()
 	local Browser = webaudio.browser_panel
 
 	function Browser:FixAutoplay()
-		print("fixautoplay wa",self)
+		dprint("fixautoplay wa",self)
 		self.autoplayfix = 0
 	end
 
@@ -143,7 +143,7 @@ function webaudio.Initialize()
 			gui.InternalMouseReleased(MOUSE_LEFT)
 		elseif self.autoplayfix == 2 then
 			gui.EnableScreenClicker(false)
-			print("apfix 2",self)
+			dprint("apfix 2",self)
 			self:SetMouseInputEnabled(self.apMouseEnabled)
 			self:MouseCapture(false)
 		elseif self.autoplayfix == 3 then
