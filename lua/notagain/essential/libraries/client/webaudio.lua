@@ -77,7 +77,7 @@ do
 		if not system.HasFocus() and GetConVar("snd_mute_losefocus"):GetBool() then
 			webaudio.SetVolume(0)
 		else
-			webaudio.SetVolume(GetConVar("volume"):GetFloat())
+			webaudio.SetVolume(GetConVar("volume"):GetFloat() * webaudio.volmod:GetFloat())
 		end
 
 		local time = RealTime()
@@ -611,9 +611,8 @@ end
 function webaudio.SetVolume(vol)
 	if webaudio.volume ~= vol then
 		webaudio.volume = vol
-		local mod = webaudio.volmod:GetFloat()
-		dprint("setting volume to " .. vol * mod)
-		run_javascript(string.format("gain.gain.value = %f", vol * mod))
+		dprint("setting volume to " .. vol)
+		run_javascript(string.format("gain.gain.value = %f", vol))
 	end
 end
 
