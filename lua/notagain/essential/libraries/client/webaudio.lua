@@ -1,12 +1,9 @@
 local webaudio = {}
 
-if me then
-	webaudio.debug = true
-end
-
 webaudio.sample_rate = nil
 webaudio.speed_of_sound = CreateClientConVar("webaudio_doppler", "800", true)
 webaudio.buffer_size = CreateClientConVar("webaudio_buffer_size", "2048", true)
+webaudio.volume = CreateClientConVar("webaudio_volume", "1", true, false, "Sets the Volume from 0-1")
 
 local function logn(str)
 	MsgC(Color(0, 255, 0), "[webaudio] ")
@@ -32,7 +29,6 @@ if webaudio.browser_panel and webaudio.browser_panel:IsValid() then
 end
 
 webaudio.browser_state = "uninitialized"
-webaudio.volume = 1
 
 local script_queue
 
@@ -74,7 +70,7 @@ do
 		if not system.HasFocus() and GetConVar("snd_mute_losefocus"):GetBool() then
 			webaudio.SetVolume(0)
 		else
-			webaudio.SetVolume(GetConVar("volume"):GetFloat())
+			webaudio.SetVolume(GetConVar("volume") * GetConVar("webaudio_volume"):GetFloat())
 		end
 
 		local time = RealTime()
@@ -606,8 +602,8 @@ end
 
 -- Audio
 function webaudio.SetVolume(vol)
-	if webaudio.volume ~= vol then
-		webaudio.volume = vol
+	if webaudio.volume:GetFloat() ~= vol then
+		webaudio.volume:SetFloat(vol)
 		run_javascript(string.format("gain.gain.value = %f", vol))
 	end
 end
@@ -1066,11 +1062,6 @@ end
 
 function webaudio.StreamExists(streamId)
 	return webaudio.streams[streamId] ~= nil
-end
-
-if me then
-	--local snd = webaudio.CreateStream("sound/vo/breencast/br_overwatch07.wav")
-	--snd:Play()
 end
 
 return webaudio
