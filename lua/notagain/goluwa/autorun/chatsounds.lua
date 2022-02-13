@@ -245,9 +245,11 @@ if CLIENT then
 
 		local ids = {}
 
-		for _, subscription in ipairs(userdata.Get(ply, "chatsounds_subscriptions")) do
-			table.insert(ids, subscription)
-		end
+        if ply:IsPlayer() then
+            for _, subscription in ipairs(userdata.Get(ply, "chatsounds_subscriptions")) do
+                table.insert(ids, subscription)
+            end
+        end
 
 		env.audio.player_object = ply
 		env.chatsounds.Say(str, math.Round(CurTime()), ids)
