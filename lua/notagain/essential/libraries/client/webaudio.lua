@@ -194,7 +194,7 @@ function webaudio.Initialize()
 			webaudio.sample_rate = args[1] or -1
 
 			if webaudio.sample_rate and webaudio.sample_rate > 48000 then
-				logn("Your sample rate set to ", webaudio.sample_rate, " Hz. Set it to 48000 or below if you experience any issues.")
+				logn("Your sample rate set to " ..webaudio.sample_rate .. " Hz. Set it to 48000 or below if you experience any issues.")
 			end
 		elseif typ == "stream" then
 			local stream = webaudio.GetStream(tonumber(args[2]) or 0)
@@ -598,6 +598,9 @@ function webaudio.Initialize()
 
 	file.Write("webaudio_blankhtml.txt", "<html></html>")
 	webaudio.browser_panel:OpenURL("asset://garrysmod/data/webaudio_blankhtml.txt")
+
+	webaudio.eye_pos = Vector()
+	webaudio.eye_ang = Angle()
 
 	hook.Add("RenderScene", "webaudio2", function(pos, ang)
 		webaudio.eye_pos = pos

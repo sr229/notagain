@@ -244,8 +244,8 @@ if CLIENT then
 		end
 
 		local ids = {}
-
-		for _, subscription in ipairs(userdata.Get(ply, "chatsounds_subscriptions")) do
+		local target = ply:IsPlayer() and ply or LocalPlayer()
+		for _, subscription in ipairs(userdata.Get(target, "chatsounds_subscriptions")) do
 			table.insert(ids, subscription)
 		end
 
