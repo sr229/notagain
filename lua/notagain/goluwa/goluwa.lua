@@ -9,7 +9,7 @@ local goluwa = {}
 goluwa.notagain_autorun = false
 
 local function dprint(...)
-	print("[goluwa]: ", ...)
+	print("goluwa: ", ...)
 end
 
 local delete_directory
@@ -37,7 +37,7 @@ do
 		tag = tag or "master"
 		http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/archive.zip?sha=" .. tag, function(data, _, _, code)
 			if code ~= 200 then
-				ErrorNoHalt("[goluwa http]: Download Failed: " .. data)
+				ErrorNoHalt("goluwa: " .. data)
 				return
 			end
 
@@ -77,7 +77,7 @@ do
 		end)
 	end
 
-	function goluwa.Update(cb, forced_tag)
+	function goluwa.Update(cb)
 		file.CreateDir("goluwa")
 
 		if not GOLUWA_FORCE_DOWNLOAD and file.IsDir("addons/goluwa", "MOD") then
@@ -93,7 +93,7 @@ do
 
 			http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/commits/" .. branch, function(data, _, _, code)
 				if code ~= 200 then
-					ErrorNoHalt("[goluwa http]: Download Failed: " .. data)
+					ErrorNoHalt("goluwa: " .. data)
 					return
 				end
 
@@ -114,7 +114,7 @@ do
 		if branch:GetString() == "release" then
 			http.Fetch("https://gitlab.com/api/v4/projects/CapsAdmin%2Fgoluwa/repository/tags", function(data, _, _, code)
 				if code ~= 200 then
-					ErrorNoHalt("[goluwa http]: Download Failed: " .. data)
+					ErrorNoHalt("goluwa: " .. data)
 					return
 				end
 
@@ -288,7 +288,7 @@ function goluwa.CreateEnv()
 				end
 			end
 
-			print("[goluwa runfile]: unable to find " .. original_path)
+			print("[goluwa] runfile: unable to find " .. original_path)
 		end
 	end
 
@@ -631,7 +631,7 @@ function goluwa.CreateEnv()
 		env.http = env.runfile("core/lua/libraries/http.lua")
 
 		function sockets.Request(tbl)
-			--tbl.callback = tbl.callback or function() end
+			--tbl.callback = tbl.callback or env.table.print
 			tbl.method = tbl.method or "GET"
 
 			if tbl.timeout and tbl.timedout_callback then
@@ -643,10 +643,6 @@ function goluwa.CreateEnv()
 			end
 
 			tbl.url = tbl.url:gsub(" ", "%%20")
-			local host, path = tbl.url:match("^(.-://.-/)(.*)$")
-			if host and path then
-				tbl.url = host .. path:gsub("%.", "%%2E")
-			end
 
 			--print("HTTP: " .. tbl.url)
 
@@ -717,8 +713,6 @@ function goluwa.CreateEnv()
 	env.input = env.runfile("framework/lua/libraries/input.lua")
 	env.language = env.runfile("engine/lua/libraries/language.lua")
 	env.L = env.language.LanguageString
-
-	env.runfile("engine/lua/libraries/extensions/serializer.lua")
 
 	do
 		local backend = CreateClientConVar("goluwa_audio_backend", "webaudio")

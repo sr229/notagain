@@ -52,17 +52,28 @@ do
 end
 
 local function load_path(path)
-	if not file.Exists(path, "LUA") then
-		return nil, "unable to find " .. path
+	if file.Exists(path, "LUA") then
+		local var = CompileFile(path)
+
+		if type(var) ~= "string" then
+			return var
+		end
+
+		return nil, var
 	end
 
-	local var = CompileFile(path)
+	if file.Exists(notagain.addon_dir .. "lua/" .. path, "MOD") then
+		local str = file.Read(notagain.addon_dir .. "lua/" .. path, "MOD")
+		local var = CompileString(str, "lua/" .. path)
 
-	if type(var) ~= "string" then
-		return var
+		if type(var) ~= "string" then
+			return var
+		end
+
+		return nil, var
 	end
 
-	return nil, var or "no error?"
+	return nil, "unable to find " .. path
 end
 
 local call_level = 0
@@ -231,6 +242,12 @@ local function run(path)
 end
 
 local function run_dir(addon_name, dir, addcsluafile_only)
+
+	local map_dir = dir .. "map_" .. game.GetMap():lower() .. "/"
+	if file.IsDir(map_dir, "LUA") then
+		run_dir(addon_name, map_dir, addcslua_files)
+	end
+
 	notagain.autorun_results[addon_name] = notagain.autorun_results[addon_name] or {}
 
 	for _, name in pairs((file.Find(dir .. "*.lua", "LUA"))) do
@@ -277,7 +294,7 @@ function notagain.AutorunDirectory(addon_name)
 end
 
 function notagain.Initialize()
-
+	
 	-- load foo/foo.lua
 	for addon_name, addon_dir in pairs(notagain.directories) do
 		if not notagain.loaded_libraries[addon_name] then
@@ -339,6 +356,10 @@ do
 	local dirs = {}
 
 	for i, addon_dir in ipairs(select(2, file.Find(root_dir .. "/*", "LUA"))) do
+		dirs[addon_dir] = root_dir .. "/" .. addon_dir
+	end
+
+	for i, addon_dir in ipairs(select(2, file.Find(notagain.addon_dir .. "lua/" .. root_dir .. "/*", "MOD"))) do
 		dirs[addon_dir] = root_dir .. "/" .. addon_dir
 	end
 

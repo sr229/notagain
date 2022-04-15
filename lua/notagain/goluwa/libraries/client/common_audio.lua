@@ -77,9 +77,9 @@ do
 	end
 
 	function META:OnError(str)
-		MsgC(Color(0, 255, 0), "[audio][" .. self.ClassName .. "] ")
-		MsgC(Color(255, 100, 100), str)
-		Msg("\n")
+		MsgC(Color(0, 255, 0), "[audio]["..self.ClassName.."] ")
+        MsgC(Color(255, 100, 100), str)
+        Msg("\n")
 	end
 
 	function META:OnRemove()
