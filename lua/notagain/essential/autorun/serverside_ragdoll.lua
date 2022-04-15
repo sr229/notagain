@@ -82,7 +82,6 @@ if SERVER then
 			if ent:GetClass() ~= "prop_ragdoll" then print("not a ragdoll") return end
 			timer.Simple(0, function() 
 				if not ent:IsValid() then print("no longer valid") return end
-				-- if ent:GetPos():Distance(ply:WorldSpaceCenter()) > 10 then print("ragdoll too far away") return end
 
 				if ent.CPPISetOwner then
 					ent:CPPISetOwner(ply)
