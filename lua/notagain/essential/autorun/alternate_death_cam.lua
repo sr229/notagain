@@ -1,0 +1,5 @@
+hook.Add("DoPlayerDeath", "altDeathCam",  function(ply)
+    timer.Simple(0, function()
+        ply:SetObserverMode(1)
+    end)
+end)
