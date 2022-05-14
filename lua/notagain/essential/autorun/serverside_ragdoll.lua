@@ -35,7 +35,7 @@ if CLIENT then
 					return {
 						origin = pos,
 						angles = dir:Angle(),
-						fov = math.max((-math.min(dist / 1000, 1)+1) * 70, 5)
+						fov = math.max((-math.min(dist / 1000, 1) + 1) * 70, 5)
 					}
 				else
 					ent.serverside_ragdoll_origin = nil
@@ -69,18 +69,18 @@ if SERVER then
 			end
 		end
 
-		timer.Simple(0.1, function() 
-			if ply:IsValid() then 
-				ply:SetMoveType(MOVETYPE_FLYGRAVITY) 
-			end 
+		timer.Simple(0.1, function()
+			if ply:IsValid() then
+				ply:SetMoveType(MOVETYPE_FLYGRAVITY)
+			end
 		end) --0 does weird things
 
-		
+
 		hook.Add("OnEntityCreated", "serverside_ragdoll", function(ent)
 			hook.Remove("OnEntityCreated", "serverside_ragdoll")
 			if not ply:IsValid() then return end
 			if ent:GetClass() ~= "prop_ragdoll" then print("not a ragdoll") return end
-			timer.Simple(0, function() 
+			timer.Simple(0, function()
 				if not ent:IsValid() then print("no longer valid") return end
 
 				if ent.CPPISetOwner then
