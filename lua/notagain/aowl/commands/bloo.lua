@@ -22,7 +22,6 @@ if CLIENT then
 			CHudDamageIndicator = true,
 			CHudDeathNotice = true,
 			CHudGeiger = true,
-			CHudHealth = true,
 			CHudHintDisplay = true,
 			CHudMenu = true,
 			CHudMessage = true,
@@ -65,26 +64,26 @@ if CLIENT then
 
 			surface.SetFont("bluscreenfont70")
 			local x1,y1 = surface.GetTextSize(":(")
-			surface.SetTextPos(	ScrW()/4.5 - x1/2,ScrH()/2 - y1/2)
+			surface.SetTextPos(	ScrW() / 4.5 - x1 / 2,ScrH() / 2 - y1 / 2)
 			surface.DrawText(":(")
 
 			surface.SetFont("bluscreenfont40")
 			local x2,y2 = surface.GetTextSize("Your PC ran into a problem that it couldn't")
-			y2 =  y1/2 + y2
-			surface.SetTextPos(	ScrW()/3 - x2/2,ScrH()/2 + y2)
+			y2 =  y1 / 2 + y2
+			surface.SetTextPos(	ScrW() / 3 - x2 / 2,ScrH() / 2 + y2)
 			surface.DrawText("Your PC ran into a problem that it couldn't")
 
 			surface.SetFont("bluscreenfont40")
 			local x3,y3 = surface.GetTextSize("handle, and now it needs to restart.")
 			y3 =  y2 + 5 + y3
-			surface.SetTextPos(	ScrW()/3 - x2/2,ScrH()/2 + y3)
+			surface.SetTextPos(	ScrW() / 3 - x2 / 2,ScrH() / 2 + y3)
 			surface.DrawText("handle, and now it needs to restart.")
 
 
 			surface.SetFont("bluscreenfont20")
 			local x4,y4 = surface.GetTextSize("You can search for the error online: HAL_INITIALIZATION_FAILED")
 			y4 =  y3 + 40 + y4
-			surface.SetTextPos(	ScrW()/3 - x2/2,ScrH()/2 + y4)
+			surface.SetTextPos(	ScrW() / 3 - x2 / 2,ScrH() / 2 + y4)
 			surface.DrawText("You can search for the error online: HAL_INITIALIZATION_FAILED")
 
 		end)
