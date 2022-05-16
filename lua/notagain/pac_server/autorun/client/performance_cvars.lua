@@ -1,5 +1,5 @@
 local settings = {
-	r_WaterDrawReflection = 1,
+	r_WaterDrawReflection = 0,
 	r_3dsky = 1,
 	mat_forceaniso = 16,
 	mat_hdr_level = 1,
