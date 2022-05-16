@@ -1,6 +1,6 @@
 local function precisionToolFix()
-	local stool = weapons.Get('gmod_tool')
-	local swep = stool.Tool['precision']
+	local stool = weapons.Get("gmod_tool")
+	local swep = stool.Tool["precision"]
 
 	if not swep then return end -- If the swep doesn't exist never run.
 
@@ -47,9 +47,9 @@ local function precisionToolFix()
 		PhysB:Sleep()
 	end
 
-	weapons.Register(stool,'gmod_tool')
+	weapons.Register(stool,"gmod_tool")
 
-	for _,v in next, ents.FindByClass('gmod_tool') do
+	for _,v in next, ents.FindByClass("gmod_tool") do
 	    v:Initialize()
 	    v:Activate()
 	end
