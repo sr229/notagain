@@ -6,46 +6,46 @@ aowl.AddCommand("weldlag=number[5]",function(pl, line, minresult)
 	local t = {}
 
 	for k,v in pairs(ents.GetAll()) do
-		local count=v:GetPhysicsObjectCount()
-		if count==0 or count>1 then continue end
-		local p=v:GetPhysicsObject()
+		local count = v:GetPhysicsObjectCount()
+		if count == 0 or count > 1 then continue end
+		local p = v:GetPhysicsObject()
 
 		if not p:IsValid() then continue end
 		if p:IsAsleep() then continue end
 		if not p:IsMotionEnabled() then
 			--if constraint.FindConstraint(v,"Weld") then -- Well only count welds since those matter the most, most often
-				t[v]=true
+				t[v] = true
 			--end
 		end
 	end
-	local lags={}
+	local lags = {}
 	for ent,_ in pairs(t) do
 		local found
 		for lagger,group in pairs(lags) do
-			if ent==lagger or group[ent] then
-				found=true
+			if ent == lagger or group[ent] then
+				found = true
 				break
 			end
 		end
 		if not found then
-			lags[ent]=constraint.GetAllConstrainedEntities(ent) or {}
+			lags[ent] = constraint.GetAllConstrainedEntities(ent) or {}
 		end
 	end
 	for c,cents in pairs(lags) do
-		local count,lagc=1,t[k] and 1 or 0
+		local count,lagc = 1,t[k] and 1 or 0
 		local owner
 		for k,v in pairs(cents) do
-			count=count+1
+			count = count + 1
 			if t[k] then
-				lagc=lagc+1
+				lagc = lagc + 1
 			end
 			if not owner and IsValid(k:CPPIGetOwner()) then
-				owner=k:CPPIGetOwner()
+				owner = k:CPPIGetOwner()
 			end
 		end
 
 		if count > minresult then
-			pl:PrintMessage(3,"Found lagging contraption with "..lagc..'/'..count.." lagging ents (Owner: "..tostring(owner)..")")
+			pl:PrintMessage(3,"Found lagging contraption with " .. lagc .. '/' .. count .. " lagging ents (Owner: " .. tostring(owner) .. ")")
 		end
 	end
 end)
@@ -70,8 +70,8 @@ aowl.AddCommand("invisible=player|self,boolean|nil", function(ply, _, target, on
 end, "developers" )
 
 aowl.AddCommand("penetrating|pen=boolean", function(ply, _, stop)
-	for k,ent in pairs(ents.GetAll()) do
-		for i=0,ent:GetPhysicsObjectCount()-1 do
+	for k, ent in pairs(ents.GetAll()) do
+		for i = 0,ent:GetPhysicsObjectCount() - 1 do
 			local pobj = ent:GetPhysicsObjectNum(i)
 			if pobj and pobj:IsPenetrating() then
 				Msg"[Aowl] "print("Penetrating object: ",ent,"Owner: ",ent:CPPIGetOwner())
@@ -86,8 +86,8 @@ end, "developers")
 
 do
 	local function sleepall()
-		for k,ent in pairs(ents.GetAll()) do
-			for i=0,ent:GetPhysicsObjectCount()-1 do
+		for k, ent in pairs(ents.GetAll()) do
+			for i = 0,ent:GetPhysicsObjectCount() - 1 do
 				local pobj = ent:GetPhysicsObjectNum(i)
 				if pobj and not pobj:IsAsleep() then
 					pobj:Sleep()
@@ -102,7 +102,7 @@ do
 end
 
 do
-	local Tag="aowl_physenv"
+	local Tag = "aowl_physenv"
 	if SERVER then
 		util.AddNetworkString(Tag)
 
@@ -115,15 +115,15 @@ do
 
 	net.Receive(Tag,function(len,who) -- SHARED
 
-		if SERVER and !who:IsAdmin() then return end
-		local t=net.ReadTable()
+		if SERVER and not who:IsAdmin() then return end
+		local t = net.ReadTable()
 
 
 		if SERVER then
-			local old=physenv.GetPerformanceSettings()
+			local old = physenv.GetPerformanceSettings()
 			for k,v in pairs(t) do
-				Msg"[EEK] "print("Changing "..tostring(k)..': ',old[k] or "???","->",v)
-				PrintMessage(3,"[PHYSENV] "..k.." changed from "..tostring(old[k] or "UNKNOWN").." to "..tostring(v))
+				Msg"[EEK] "print("Changing " .. tostring(k) .. ": ", old[k] or "???","->", v)
+				PrintMessage(3,"[PHYSENV] " .. k .. " changed from " .. tostring(old[k] or "UNKNOWN") .. " to " .. tostring(v))
 			end
 			physenv.SetPerformanceSettings(t)
 			return
@@ -138,10 +138,10 @@ do
 		local Col1 = w:AddColumn( "Key" )
 		local Col2 = w:AddColumn( "Value" )
 
-		local idkey={}
-		for k,v in pairs(t) do
+		local idkey = {}
+		for k, v in pairs(t) do
 			idkey[#idkey+1]=k
-			local l=w:AddLine(tostring(k),tostring(v))
+			local l = w:AddLine(tostring(k),tostring(v))
 			l.Columns[2]:Remove()
 			local dt=vgui.Create('DTextEntry',l)
 			dt:SetNumeric(true)

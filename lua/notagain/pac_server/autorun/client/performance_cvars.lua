@@ -1,8 +1,8 @@
 local settings = {
-	r_WaterDrawReflection = 0,
-	r_3dsky = 0,
+	r_WaterDrawReflection = 1,
+	r_3dsky = 1,
 	mat_forceaniso = 16,
-	mat_hdr_level = 0,
+	mat_hdr_level = 1,
 }
 
 local cvars = {}
