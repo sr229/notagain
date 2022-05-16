@@ -37,10 +37,8 @@ hook.Add("InitPostEntity", "sandbox_modifications", function()
 		local Weapon = ply:GetActiveWeapon()
 
 		-- Give the active weapon a go at changing the viewmodel position
-		if Weapon:IsValid() then
-			if Weapon.CalcView then
-				view.origin, view.angles, view.fov = Weapon.CalcView( Weapon, ply, origin * 1, angles * 1, fov ) -- Note: *1 to copy the object so the child function can't edit it.
-			end
+		if Weapon:IsValid() and Weapon.CalcView then
+			view.origin, view.angles, view.fov = Weapon.CalcView( Weapon, ply, origin * 1, angles * 1, fov ) -- Note: *1 to copy the object so the child function can't edit it.
 		end
 
 		return view
