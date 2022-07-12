@@ -9,7 +9,7 @@ aowl.AddCommand("map|changelevel=string,number[10]", function(ply, line, map, ti
 end, "developers")
 
 aowl.AddCommand("nextmap", function(ply, line)
-	ply:ChatPrint("The next map is "..game.NextMap())
+	ply:ChatPrint("The next map is " .. game.NextMap())
 end, "players")
 
 aowl.AddCommand("setnextmap=string", function(ply, line, map)
@@ -18,7 +18,7 @@ aowl.AddCommand("setnextmap=string", function(ply, line, map)
 	end
 
 	game.SetNextMap(map)
-	ply:ChatPrint("The next map is now "..game.NextMap())
+	ply:ChatPrint("The next map is now " .. game.NextMap())
 end, "developers")
 
 aowl.AddCommand("maprand=string_trim,number[10]", function(player, line, map, time)
@@ -26,7 +26,7 @@ aowl.AddCommand("maprand=string_trim,number[10]", function(player, line, map, ti
 	local candidates = {}
 
 	for k, v in ipairs(maps) do
-		if (not map or map=='') or v:find(map) then
+		if (not map or map == '') or v:find(map) then
 			table.insert(candidates, v:match("^(.*)%.bsp$"):lower())
 		end
 	end
@@ -107,7 +107,7 @@ aowl.AddCommand("cleanup=player|string", function(ply, line, ent)
 end)
 
 aowl.AddCommand("restart=number[20],string_trim[no reason]", function(player, line, seconds, reason)
-	aowl.CountDown(seconds, "RESTARTING SERVER " .. reason, function()
+	aowl.CountDown(seconds, "RESTARTING SERVER " .. "(Reason: " .. reason .. ")", function()
 		game.ConsoleCommand("changelevel " .. game.GetMap() .. "\n")
 	end)
 end, "developers")
@@ -123,7 +123,7 @@ aowl.AddCommand("reboot=number[20]", function(player, line, time)
 end, "developers")
 
 aowl.AddCommand("uptime",function()
-	PrintMessage(3,"Server uptime: "..string.NiceTime(SysTime())..' | Map uptime: '..string.NiceTime(CurTime()))
+	PrintMessage(3, "Server uptime: " .. string.NiceTime(SysTime()) .. " | Map uptime: " .. string.NiceTime(CurTime()))
 end)
 
 aowl.AddCommand("decals|cleardecals", function(ply, line)
