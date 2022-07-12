@@ -78,8 +78,8 @@ if CLIENT then
 	local b = 1.5
 
 	timer.Simple(0.25, function()
-		team.SetUp(TEAM_PLAYERS, "players", Color(150*b, 50*b, 50*b, 255))
-		team.SetUp(TEAM_FRIENDS, "priends", Color(25*b, 100*b, 130*b, 255))
+		team.SetUp(TEAM_PLAYERS, "players", Color(150 * b, 50 * b, 50 * b, 255))
+		team.SetUp(TEAM_FRIENDS, "priends", Color(25 * b, 100 * b, 130 * b, 255))
 	end)
 
 	META._Team = META._Team or META.Team
