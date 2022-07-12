@@ -173,7 +173,7 @@ function perfutil.CRacer()
 		if no_print then return temp end
 		local total = 0
 		for _, v in ipairs(temp) do
-			local time = v.total_time/1000
+			local time = v.total_time / 1000
 			print(v.name .. " = " .. time)
 			total = total + time
 		end
@@ -222,7 +222,7 @@ function perfutil.CRacer()
 				local v = stats[i]
 				if not v then break end
 				surface.SetTextPos(5, 5 + (i * h))
-				surface.DrawText(v.name .. " = " .. math.Round(v.total_time/1000, 4))
+				surface.DrawText(v.name .. " = " .. math.Round(v.total_time / 1000, 4))
 			end
 		end
 	end)

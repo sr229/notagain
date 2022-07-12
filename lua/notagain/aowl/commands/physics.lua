@@ -140,21 +140,21 @@ do
 
 		local idkey = {}
 		for k, v in pairs(t) do
-			idkey[#idkey+1]=k
+			idkey[#idkey + 1] = k
 			local l = w:AddLine(tostring(k),tostring(v))
 			l.Columns[2]:Remove()
-			local dt=vgui.Create('DTextEntry',l)
+			local dt = vgui.Create("DTextEntry", l)
 			dt:SetNumeric(true)
 			dt:SetKeyBoardInputEnabled(true)
 			dt:SetMouseInputEnabled(true)
-			l.Columns[2]=dt
+			l.Columns[2] = dt
 			dt:Dock(RIGHT)
 			dt:SetText(v)
-			dt.OnEnter=function(dt)
-				local val=dt:GetValue()
+			dt.OnEnter = function(dt)
+				local val = dt:GetValue()
 				print("Wunna change",k,"to",tonumber(val))
 				net.Start(Tag)
-					net.WriteTable{[k]=tonumber(val)}
+					net.WriteTable{[k] = tonumber(val)}
 				net.SendToServer()
 			end
 		end
